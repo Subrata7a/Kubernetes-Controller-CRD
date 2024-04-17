@@ -1,0 +1,14 @@
+apiVersion: samplecontroller.evan.com/v1alpha1
+kind: subrata
+metadata:
+  name: example
+  namespace: default
+spec:
+  deploymentConfig:
+    name: sbr
+    replicas: 5
+    image: nginx
+  serviceConfig:
+    type: NodePort
+    port: 4444
+  deletionPolicy: WipeOut
