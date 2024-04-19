@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
-  name: subrata.samplecontroller.evan.com
+  name: subrata.samplecontroller.subrata.com
 spec:
-  group: samplecontroller.evan.com
+  group: samplecontroller.subrata.com
   names:
     kind: Subrata
     listKind: SubrataList

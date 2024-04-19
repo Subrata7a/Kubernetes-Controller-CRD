@@ -19,9 +19,9 @@ limitations under the License.
 package externalversions
 
 import (
-	versioned "k8s-sample-controller/pkg/generated/clientset/versioned"
-	internalinterfaces "k8s-sample-controller/pkg/generated/informers/externalversions/internalinterfaces"
-	samplecontroller "k8s-sample-controller/pkg/generated/informers/externalversions/samplecontroller"
+	versioned "SampleCRDControlle/pkg/generated/clientset/versioned"
+	internalinterfaces "SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
+	samplecontroller "SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller"
 	reflect "reflect"
 	sync "sync"
 	time "time"

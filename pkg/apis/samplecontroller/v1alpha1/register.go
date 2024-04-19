@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	samplecontroller "k8s-sample-controller/pkg/apis/samplecontroller"
+	"SampleCRDControlle/pkg/apis/samplecontroller"
 )
 
 // SchemeGroupVersion is group version used to register these objects

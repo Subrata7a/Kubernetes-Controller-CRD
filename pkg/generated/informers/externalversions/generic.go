@@ -19,8 +19,8 @@ limitations under the License.
 package externalversions
 
 import (
+	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
 	"fmt"
-	v1alpha1 "k8s-sample-controller/pkg/apis/samplecontroller/v1alpha1"
 
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
@@ -52,7 +52,7 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=samplecontroller.evan.com, Version=v1alpha1
+	// Group=samplecontroller.subrata.com, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("subratas"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Samplecontroller().V1alpha1().Subratas().Informer()}, nil
 

@@ -19,11 +19,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	samplecontrollerv1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	versioned "SampleCRDControlle/pkg/generated/clientset/versioned"
+	internalinterfaces "SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "SampleCRDControlle/pkg/generated/listers/samplecontroller/v1alpha1"
 	"context"
-	samplecontrollerv1alpha1 "k8s-sample-controller/pkg/apis/samplecontroller/v1alpha1"
-	versioned "k8s-sample-controller/pkg/generated/clientset/versioned"
-	internalinterfaces "k8s-sample-controller/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "k8s-sample-controller/pkg/generated/listers/samplecontroller/v1alpha1"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

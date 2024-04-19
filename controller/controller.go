@@ -26,11 +26,11 @@ import (
 	"log"
 	"time"
 
-	samplev1alpha1 "k8s-sample-controller/pkg/apis/samplecontroller/v1alpha1"
-	clientset "k8s-sample-controller/pkg/generated/clientset/versioned"
-	samplescheme "k8s-sample-controller/pkg/generated/clientset/versioned/scheme"
-	informers "k8s-sample-controller/pkg/generated/informers/externalversions/samplecontroller/v1alpha1"
-	listers "k8s-sample-controller/pkg/generated/listers/samplecontroller/v1alpha1"
+	samplev1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	clientset "SampleCRDControlle/pkg/generated/clientset/versioned"
+	samplescheme "SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
+	informers "SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller/v1alpha1"
+	listers "SampleCRDControlle/pkg/generated/listers/samplecontroller/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -53,16 +53,16 @@ import (
 const controllerAgentName = "sample-controller"
 
 const (
-	// SuccessSynced is used as part of the Event 'reason' when a Evan is synced
+	// SuccessSynced is used as part of the Event 'reason' when a Subrata is synced
 	SuccessSynced = "Synced"
-	// ErrResourceExists is used as part of the Event 'reason' when a Evan fails
+	// ErrResourceExists is used as part of the Event 'reason' when a Subrata fails
 	// to sync due to a Deployment of the same name already existing.
 	ErrResourceExists = "ErrResourceExists"
 
 	// MessageResourceExists is the message used for Events when a resource
 	// fails to sync due to a Deployment already existing
-	MessageResourceExists = "Resource %q already exists and is not managed by Evan"
-	// MessageResourceSynced is the message used for an Event fired when a Evan
+	MessageResourceExists = "Resource %q already exists and is not managed by Subrata"
+	// MessageResourceSynced is the message used for an Event fired when a Subrata
 	// is synced successfully
 	MessageResourceSynced = "Subrata synced successfully"
 )
@@ -82,9 +82,9 @@ type Controller struct {
 	serviceLister corev1lister.ServiceLister
 	serviceSynced cache.InformerSynced
 
-	// Evan Resource
-	evansLister listers.EvanLister
-	evansSynced cache.InformerSynced
+	// Subrata Resource
+	subratasLister listers.SubrataLister
+	subratasSynced cache.InformerSynced
 
 	// workqueue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
@@ -107,7 +107,7 @@ func NewController(
 	deploymentInformer appsinformers.DeploymentInformer,
 	serviceInformer corev1informers.ServiceInformer,
 
-	EvanInformer informers.EvanInformer) *Controller {
+	SubrataInformer informers.SubrataInformer) *Controller {
 	logger := klog.FromContext(ctx)
 
 	// Create event broadcaster
@@ -138,26 +138,26 @@ func NewController(
 		serviceLister: serviceInformer.Lister(),
 		serviceSynced: serviceInformer.Informer().HasSynced,
 
-		// Evan Resource
-		evansLister: EvanInformer.Lister(),
-		evansSynced: EvanInformer.Informer().HasSynced,
+		// Subrata Resource
+		subratasLister: SubrataInformer.Lister(),
+		subratasSynced: SubrataInformer.Informer().HasSynced,
 
 		workqueue: workqueue.NewRateLimitingQueue(ratelimiter),
 		recorder:  recorder,
 	}
 
 	logger.Info("Setting up event handlers")
-	// Set up an event handler for when Evan resources change
-	EvanInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.enqueueEvan,
+	// Set up an event handler for when Subrata resources change
+	SubrataInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: controller.enqueueSubrata,
 		UpdateFunc: func(old, new interface{}) {
-			controller.enqueueEvan(new)
+			controller.enqueueSubrata(new)
 		},
 	})
 
 	// Set up an event handler for when Deployment resources change. This
 	// handler will lookup the owner of the given Deployment, and if it is
-	// owned by a Evan resource then the handler will enqueue that Evan resource for
+	// owned by a Subrata resource then the handler will enqueue that Subrata resource for
 	// processing. This way, we don't need to implement custom logic for
 	// handling Deployment resources. More info on this pattern:
 	// https://github.com/kubernetes/community/blob/8cafef897a22026d42f5e5bb3f104febe7e29830/contributors/devel/controllers.md
@@ -202,17 +202,17 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 	logger := klog.FromContext(ctx)
 
 	// Start the informer factories to begin populating the informer caches
-	logger.Info("Starting Evan controller")
+	logger.Info("Starting Subrata controller")
 
 	// Wait for the caches to be synced before starting workers
 	logger.Info("Waiting for informer caches to sync")
 
-	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentsSynced, c.serviceSynced, c.evansSynced); !ok {
+	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentsSynced, c.serviceSynced, c.subratasSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
 	logger.Info("Starting workers", "count", workers)
-	// Launch two workers to process Evan resources
+	// Launch two workers to process Subrata resources
 	for i := 0; i < workers; i++ {
 		go wait.UntilWithContext(ctx, c.runWorker, time.Second)
 	}
@@ -289,55 +289,55 @@ func (c *Controller) processNextWorkItem(ctx context.Context) bool {
 	return true
 }
 
-func generateDeploymentName(evanName string, evanDeploymentName string, resourceCreationTimestamp int64) string {
-	deploymentName := fmt.Sprintf("%s-%s-%s", evanName, evanDeploymentName, strconv.FormatInt(resourceCreationTimestamp, 10))
-	if evanDeploymentName == "" {
-		deploymentName = fmt.Sprintf("%s-%s", evanName, strconv.FormatInt(resourceCreationTimestamp, 10))
+func generateDeploymentName(subrataName string, subrataDeploymentName string, resourceCreationTimestamp int64) string {
+	deploymentName := fmt.Sprintf("%s-%s-%s", subrataName, subrataDeploymentName, strconv.FormatInt(resourceCreationTimestamp, 10))
+	if subrataDeploymentName == "" {
+		deploymentName = fmt.Sprintf("%s-%s", subrataName, strconv.FormatInt(resourceCreationTimestamp, 10))
 	}
 	return deploymentName
 }
-func generateServiceName(evanName string, evanServiceName string, resourceCreationTimestamp int64) string {
-	deploymentName := fmt.Sprintf("%s-%s-%s", evanName, evanServiceName, strconv.FormatInt(resourceCreationTimestamp, 10))
-	if evanServiceName == "" {
-		deploymentName = fmt.Sprintf("%s-%s", evanName, strconv.FormatInt(resourceCreationTimestamp, 10))
+func generateServiceName(subrataName string, subrataServiceName string, resourceCreationTimestamp int64) string {
+	deploymentName := fmt.Sprintf("%s-%s-%s", subrataName, subrataServiceName, strconv.FormatInt(resourceCreationTimestamp, 10))
+	if subrataServiceName == "" {
+		deploymentName = fmt.Sprintf("%s-%s", subrataName, strconv.FormatInt(resourceCreationTimestamp, 10))
 	}
 	return deploymentName
 }
 
-func isReplicasChanged(evanReplicas int32, deploymentReplicas int32) bool {
-	if evanReplicas != 0 && evanReplicas != deploymentReplicas {
+func isReplicasChanged(subrataReplicas int32, deploymentReplicas int32) bool {
+	if subrataReplicas != 0 && subrataReplicas != deploymentReplicas {
 		return true
 	}
 	return false
 }
-func isDeploymentNameChanged(evanDeploymentName string, deploymentName string) bool {
-	if evanDeploymentName != "" && evanDeploymentName != deploymentName {
+func isDeploymentNameChanged(subrataDeploymentName string, deploymentName string) bool {
+	if subrataDeploymentName != "" && subrataDeploymentName != deploymentName {
 		return true
 	}
 	return false
 }
-func isDeploymentImageChanged(evanDeploymentImage string, deploymentImage string) bool {
-	if evanDeploymentImage != "" && evanDeploymentImage != deploymentImage {
+func isDeploymentImageChanged(subrataDeploymentImage string, deploymentImage string) bool {
+	if subrataDeploymentImage != "" && subrataDeploymentImage != deploymentImage {
 		return true
 	}
 	return false
 }
 
-func isServiceNameChanged(evanServiceName string, serviceName string) bool {
-	if evanServiceName != "" && evanServiceName != serviceName {
+func isServiceNameChanged(subrataServiceName string, serviceName string) bool {
+	if subrataServiceName != "" && subrataServiceName != serviceName {
 		return true
 	}
 	return false
 }
-func isServicePortChanged(evanServicePort int32, servicePort int32) bool {
-	if evanServicePort != 0 && evanServicePort != servicePort {
+func isServicePortChanged(subrataServicePort int32, servicePort int32) bool {
+	if subrataServicePort != 0 && subrataServicePort != servicePort {
 		return true
 	}
 	return false
 }
 
 // syncHandler compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the Evan resource
+// converge the two. It then updates the Status block of the Subrata resource
 // with the current status of the resource.
 func (c *Controller) syncHandler(ctx context.Context, key string) error {
 
@@ -351,41 +351,41 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Get the Evan resource with this namespace/name
-	Evan, err := c.evansLister.Evans(namespace).Get(name)
+	// Get the Subrata resource with this namespace/name
+	Subrata, err := c.subratasLister.Subratas(namespace).Get(name)
 
 	if err != nil {
-		//The Evan resource may no longer exist, in which case we stop processing.
+		//The Subrata resource may no longer exist, in which case we stop processing.
 		if errors.IsNotFound(err) {
-			utilruntime.HandleError(fmt.Errorf("Evan '%s' in work queue no longer exists", key))
+			utilruntime.HandleError(fmt.Errorf("Subrata '%s' in work queue no longer exists", key))
 			return nil
 		}
 		return err
 	}
 
 	// Get Resource CreationTimestamp
-	resourceCreationTimestamp := Evan.CreationTimestamp.Unix()
+	resourceCreationTimestamp := Subrata.CreationTimestamp.Unix()
 	// Deployment Name
-	deploymentName := generateDeploymentName(Evan.Name, Evan.Spec.DeploymentConfig.Name, resourceCreationTimestamp)
+	deploymentName := generateDeploymentName(Subrata.Name, Subrata.Spec.DeploymentConfig.Name, resourceCreationTimestamp)
 
 	// Check DeletionPolicy
-	if Evan.Spec.DeletionPolicy == "" {
-		Evan.Spec.DeletionPolicy = "WipeOut"
+	if Subrata.Spec.DeletionPolicy == "" {
+		Subrata.Spec.DeletionPolicy = "WipeOut"
 	}
 
 	// If DeletionPolicy is WipeOut, add owner reference
-	updateDeployment := newDeployment(Evan, deploymentName)
-	if Evan.Spec.DeletionPolicy == "WipeOut" {
+	updateDeployment := newDeployment(Subrata, deploymentName)
+	if Subrata.Spec.DeletionPolicy == "WipeOut" {
 		updateDeployment.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
-			*metav1.NewControllerRef(Evan, samplev1alpha1.SchemeGroupVersion.WithKind("Evan")),
+			*metav1.NewControllerRef(Subrata, samplev1alpha1.SchemeGroupVersion.WithKind("Subrata")),
 		}
 	}
 
-	// Get the deployment with the name specified in Evan.spec
-	deployment, err := c.deploymentsLister.Deployments(Evan.ObjectMeta.Namespace).Get(deploymentName)
+	// Get the deployment with the name specified in Subrata.spec
+	deployment, err := c.deploymentsLister.Deployments(Subrata.ObjectMeta.Namespace).Get(deploymentName)
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Evan.ObjectMeta.Namespace).Create(context.TODO(), updateDeployment, metav1.CreateOptions{})
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Create(context.TODO(), updateDeployment, metav1.CreateOptions{})
 		if err != nil {
 			log.Println(err)
 			return err
@@ -395,18 +395,18 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 
 	// If the Deployment is not controlled by this Evan resource, we should log
 	// a warning to the event recorder and return error msg.
-	if Evan.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(deployment, Evan) {
+	if Subrata.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(deployment, Subrata) {
 		msg := fmt.Sprintf(MessageResourceExists, deploymentName)
-		c.recorder.Event(Evan, corev1.EventTypeWarning, ErrResourceExists, msg)
+		c.recorder.Event(Subrata, corev1.EventTypeWarning, ErrResourceExists, msg)
 		return fmt.Errorf("%s", msg)
 	}
 
 	// If this number of the replicas on the Evan resource is specified, and the
 	// number does not equal the current desired replicas on the Deployment, we
 	// should update the Deployment resource.
-	if isReplicasChanged(*Evan.Spec.DeploymentConfig.Replicas, *deployment.Spec.Replicas) {
-		logger.V(4).Info("Update deployment resource", "currentReplicas", *Evan.Spec.DeploymentConfig.Replicas, "desiredReplicas", *deployment.Spec.Replicas)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Evan.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
+	if isReplicasChanged(*Subrata.Spec.DeploymentConfig.Replicas, *deployment.Spec.Replicas) {
+		logger.V(4).Info("Update deployment resource", "currentReplicas", *Subrata.Spec.DeploymentConfig.Replicas, "desiredReplicas", *deployment.Spec.Replicas)
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -415,62 +415,62 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	// If Deployment Name Change ------------------------------------------------
 	if isDeploymentNameChanged(deploymentName, deployment.ObjectMeta.Name) {
 		logger.V(4).Info("Update deployment resource", "currentName", deploymentName, "desiredName", deployment.ObjectMeta.Name)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Evan.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	// If Deployment Image Change ------------------------------------------------
-	if isDeploymentImageChanged(Evan.Spec.DeploymentConfig.Image, deployment.Spec.Template.Spec.Containers[0].Image) {
-		logger.V(4).Info("Update deployment resource", "currentImage", Evan.Spec.DeploymentConfig.Image, "desiredImage", deployment.Spec.Template.Spec.Containers[0].Image)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Evan.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
+	if isDeploymentImageChanged(Subrata.Spec.DeploymentConfig.Image, deployment.Spec.Template.Spec.Containers[0].Image) {
+		logger.V(4).Info("Update deployment resource", "currentImage", Subrata.Spec.DeploymentConfig.Image, "desiredImage", deployment.Spec.Template.Spec.Containers[0].Image)
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	// Service Get-----------------------------------------------------------------------------
-	Evan, err = c.evansLister.Evans(namespace).Get(name)
+	Subrata, err = c.subratasLister.Subratas(namespace).Get(name)
 	if err != nil {
 		// The Evan resource may no longer exist, in which case we stop
 		// processing.
 		if errors.IsNotFound(err) {
-			utilruntime.HandleError(fmt.Errorf("Evan '%s' in work queue no longer exists", key))
+			utilruntime.HandleError(fmt.Errorf("Subrata '%s' in work queue no longer exists", key))
 			return nil
 		}
 		return err
 	}
 
 	// Service Name
-	serviceName := generateServiceName(Evan.Name, Evan.Spec.ServiceConfig.Name, resourceCreationTimestamp)
+	serviceName := generateServiceName(Subrata.Name, Subrata.Spec.ServiceConfig.Name, resourceCreationTimestamp)
 
 	// Get the service port
-	servicePort := Evan.Spec.ServiceConfig.Port
+	servicePort := Subrata.Spec.ServiceConfig.Port
 	if servicePort == 0 {
 		utilruntime.HandleError(fmt.Errorf("Service Port is not provided by user"))
 		return nil
 	}
 
 	// If TargetPort is not defined by User, set the TargetPort as same as Port
-	serviceTargetPort := Evan.Spec.ServiceConfig.TargetPort
-	if Evan.Spec.ServiceConfig.TargetPort == 0 {
+	serviceTargetPort := Subrata.Spec.ServiceConfig.TargetPort
+	if Subrata.Spec.ServiceConfig.TargetPort == 0 {
 		serviceTargetPort = servicePort
 	}
 
 	// If deletion Policy is WipeOut, then set the owner Reference
-	updateService := newService(Evan, serviceName, serviceTargetPort)
-	if Evan.Spec.DeletionPolicy == "WipeOut" {
+	updateService := newService(Subrata, serviceName, serviceTargetPort)
+	if Subrata.Spec.DeletionPolicy == "WipeOut" {
 		updateService.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
-			*metav1.NewControllerRef(Evan, samplev1alpha1.SchemeGroupVersion.WithKind("Evan")),
+			*metav1.NewControllerRef(Subrata, samplev1alpha1.SchemeGroupVersion.WithKind("Evan")),
 		}
 	}
 
 	// Get the service with the name specified in Evan.spec
-	service, err := c.kubeclientset.CoreV1().Services(Evan.ObjectMeta.Namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
+	service, err := c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Create the service
-		service, err = c.kubeclientset.CoreV1().Services(Evan.ObjectMeta.Namespace).Create(context.TODO(), updateService, metav1.CreateOptions{})
+		service, err = c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Create(context.TODO(), updateService, metav1.CreateOptions{})
 		if err != nil {
 			log.Println(err)
 			return err
@@ -478,16 +478,16 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 		log.Printf("\nservice %s created .....\n", serviceName)
 	}
 
-	if Evan.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(service, Evan) {
+	if Subrata.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(service, Subrata) {
 		msg := fmt.Sprintf(MessageResourceExists, serviceName)
-		c.recorder.Event(Evan, corev1.EventTypeWarning, ErrResourceExists, msg)
+		c.recorder.Event(Subrata, corev1.EventTypeWarning, ErrResourceExists, msg)
 		return fmt.Errorf("%s", msg)
 	}
 
 	// If Service Name Change, update the service
 	if isServiceNameChanged(serviceName, service.ObjectMeta.Name) {
 		logger.V(4).Info("Update Service resource", "currentName", serviceName, "desiredName", service.ObjectMeta.Name)
-		service, err = c.kubeclientset.CoreV1().Services(Evan.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
+		service, err = c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -496,13 +496,13 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	// If Service Port Change, update the service
 	if isServicePortChanged(servicePort, service.Spec.Ports[0].Port) {
 		logger.V(4).Info("Update Service resource", "currentName", servicePort, "desiredName", service.Spec.Ports[0].Port)
-		service, err = c.kubeclientset.CoreV1().Services(Evan.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
+		service, err = c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	err = c.updateevan(Evan, updateDeployment)
+	err = c.updateSubrata(Subrata, updateDeployment)
 	if err != nil {
 		return err
 	}
@@ -510,24 +510,24 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Controller) updateevan(Evan *samplev1alpha1.Evan, deployment *appsv1.Deployment) error {
+func (c *Controller) updateSubrata(Subrata *samplev1alpha1.Subrata, deployment *appsv1.Deployment) error {
 	// NEVER modify objects from the store. It's a read-only, local cache.
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
-	EvanCopy := Evan.DeepCopy()
-	EvanCopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+	SubrataCopy := Subrata.DeepCopy()
+	SubrataCopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
 	// If the CustomResourceSubresources feature gate is not enabled,
 	// we must use Update instead of UpdateStatus to update the Status block of the Evan resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := c.sampleclientset.SamplecontrollerV1alpha1().Evans(Evan.ObjectMeta.Namespace).Update(context.TODO(), EvanCopy, metav1.UpdateOptions{})
+	_, err := c.sampleclientset.SamplecontrollerV1alpha1().Subratas(Subrata.ObjectMeta.Namespace).Update(context.TODO(), SubrataCopy, metav1.UpdateOptions{})
 	return err
 }
 
-// enqueueEvan takes a Evan resource and converts it into a namespace/name
+// enqueueSubrata takes a Subrata resource and converts it into a namespace/name
 // string which is then put onto the work queue. This method should *not* be
 // passed resources of any type other than Evan.
-func (c *Controller) enqueueEvan(obj interface{}) {
+func (c *Controller) enqueueSubrata(obj interface{}) {
 	var key string
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
@@ -538,9 +538,9 @@ func (c *Controller) enqueueEvan(obj interface{}) {
 }
 
 // handleObject will take any resource implementing metav1.Object and attempt
-// to find the Evan resource that 'owns' it. It does this by looking at the
+// to find the Subrata resource that 'owns' it. It does this by looking at the
 // objects metadata.ownerReferences field for an appropriate OwnerReference.
-// It then enqueues that Evan resource to be processed. If the object does not
+// It then enqueues that Subrata resource to be processed. If the object does not
 // have an appropriate OwnerReference, it will simply be skipped.
 func (c *Controller) handleObject(obj interface{}) {
 	var object metav1.Object
@@ -563,36 +563,36 @@ func (c *Controller) handleObject(obj interface{}) {
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
 		// If this object is not owned by a Evan, we should not do anything more
 		// with it.
-		if ownerRef.Kind != "Evan" {
+		if ownerRef.Kind != "Subrata" {
 			return
 		}
 
-		Evan, err := c.evansLister.Evans(object.GetNamespace()).Get(ownerRef.Name)
+		Subrata, err := c.subratasLister.Subratas(object.GetNamespace()).Get(ownerRef.Name)
 		if err != nil {
 			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "Evan", ownerRef.Name)
 			return
 		}
-		c.enqueueEvan(Evan)
+		c.enqueueSubrata(Subrata)
 		return
 	}
 }
 
-// newDeployment creates a new Deployment for an Evan resource. It also sets
+// newDeployment creates a new Deployment for an Subrata resource. It also sets
 // the appropriate OwnerReferences on the resource so handleObject can discover
-// the Evan resource that 'owns' it.
-func newDeployment(Evan *samplev1alpha1.Evan, deploymentName string) *appsv1.Deployment {
+// the Subrata resource that 'owns' it.
+func newDeployment(Subrata *samplev1alpha1.Subrata, deploymentName string) *appsv1.Deployment {
 
 	deployment := &appsv1.Deployment{}
 	labels := map[string]string{
-		"app": "my-book",
+		"app": "nginx",
 	}
 	deployment.Labels = labels
 	deployment.TypeMeta.Kind = "Deployment"
 
 	deployment.ObjectMeta.Name = deploymentName
-	deployment.ObjectMeta.Namespace = Evan.ObjectMeta.Namespace
+	deployment.ObjectMeta.Namespace = Subrata.ObjectMeta.Namespace
 
-	deployment.Spec.Replicas = Evan.Spec.DeploymentConfig.Replicas
+	deployment.Spec.Replicas = Subrata.Spec.DeploymentConfig.Replicas
 	deployment.Spec.Selector = &metav1.LabelSelector{
 		MatchLabels: labels,
 	}
@@ -602,11 +602,11 @@ func newDeployment(Evan *samplev1alpha1.Evan, deploymentName string) *appsv1.Dep
 	deployment.Spec.Template.Spec = corev1.PodSpec{
 		Containers: []corev1.Container{
 			{
-				Name:  "my-book",
-				Image: Evan.Spec.DeploymentConfig.Image,
+				Name:  "nginx",
+				Image: Subrata.Spec.DeploymentConfig.Image,
 				Ports: []corev1.ContainerPort{
 					{
-						ContainerPort: Evan.Spec.ServiceConfig.Port,
+						ContainerPort: Subrata.Spec.ServiceConfig.Port,
 					},
 				},
 			},
@@ -615,10 +615,10 @@ func newDeployment(Evan *samplev1alpha1.Evan, deploymentName string) *appsv1.Dep
 	return deployment
 }
 
-func newService(Evan *samplev1alpha1.Evan, serviceName string, serviceTargetPort int32) *corev1.Service {
+func newService(Subrata *samplev1alpha1.Subrata, serviceName string, serviceTargetPort int32) *corev1.Service {
 
 	labels := map[string]string{
-		"app": "my-book",
+		"app": "nginx",
 	}
 	service := &corev1.Service{}
 	service.Labels = labels
@@ -629,18 +629,18 @@ func newService(Evan *samplev1alpha1.Evan, serviceName string, serviceTargetPort
 
 	service.ObjectMeta = metav1.ObjectMeta{
 		Name:      serviceName,
-		Namespace: Evan.ObjectMeta.Namespace,
+		Namespace: Subrata.ObjectMeta.Namespace,
 	}
 
 	service.Spec = corev1.ServiceSpec{
-		Type:     Evan.Spec.ServiceConfig.Type,
+		Type:     Subrata.Spec.ServiceConfig.Type,
 		Selector: labels,
 	}
 	service.Spec.Ports = []corev1.ServicePort{
 		corev1.ServicePort{
-			Port:       Evan.Spec.ServiceConfig.Port,
+			Port:       Subrata.Spec.ServiceConfig.Port,
 			TargetPort: intstr.FromInt32(serviceTargetPort),
-			NodePort:   Evan.Spec.ServiceConfig.NodePort,
+			NodePort:   Subrata.Spec.ServiceConfig.NodePort,
 		},
 	}
 	return service

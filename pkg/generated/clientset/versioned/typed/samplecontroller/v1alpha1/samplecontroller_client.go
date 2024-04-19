@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "k8s-sample-controller/pkg/apis/samplecontroller/v1alpha1"
-	"k8s-sample-controller/pkg/generated/clientset/versioned/scheme"
+	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	"SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
 	"net/http"
 
 	rest "k8s.io/client-go/rest"
@@ -31,7 +31,7 @@ type SamplecontrollerV1alpha1Interface interface {
 	SubratasGetter
 }
 
-// SamplecontrollerV1alpha1Client is used to interact with features provided by the samplecontroller.evan.com group.
+// SamplecontrollerV1alpha1Client is used to interact with features provided by the samplecontroller.subrata.com group.
 type SamplecontrollerV1alpha1Client struct {
 	restClient rest.Interface
 }

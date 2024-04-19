@@ -19,8 +19,8 @@ limitations under the License.
 package versioned
 
 import (
+	samplecontrollerv1alpha1 "SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
 	"fmt"
-	samplecontrollerv1alpha1 "k8s-sample-controller/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
 	"net/http"
 
 	discovery "k8s.io/client-go/discovery"

@@ -19,9 +19,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	scheme "SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
 	"context"
-	v1alpha1 "k8s-sample-controller/pkg/apis/samplecontroller/v1alpha1"
-	scheme "k8s-sample-controller/pkg/generated/clientset/versioned/scheme"
 	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

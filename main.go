@@ -1,11 +1,11 @@
 package main
 
 import (
+	controller "SampleCRDControlle/controller"
+	clientset "SampleCRDControlle/pkg/generated/clientset/versioned"
+	informers "SampleCRDControlle/pkg/generated/informers/externalversions"
+	"SampleCRDControlle/pkg/signals"
 	"flag"
-	controller "k8s-sample-controller/controller"
-	clientset "k8s-sample-controller/pkg/generated/clientset/versioned"
-	informers "k8s-sample-controller/pkg/generated/informers/externalversions"
-	"k8s-sample-controller/pkg/signals"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"

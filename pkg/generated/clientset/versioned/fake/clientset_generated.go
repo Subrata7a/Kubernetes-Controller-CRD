@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "k8s-sample-controller/pkg/generated/clientset/versioned"
-	samplecontrollerv1alpha1 "k8s-sample-controller/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
-	fakesamplecontrollerv1alpha1 "k8s-sample-controller/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1/fake"
+	clientset "SampleCRDControlle/pkg/generated/clientset/versioned"
+	samplecontrollerv1alpha1 "SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
+	fakesamplecontrollerv1alpha1 "SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1/fake"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"

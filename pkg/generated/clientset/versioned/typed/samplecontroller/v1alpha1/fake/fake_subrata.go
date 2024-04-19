@@ -19,8 +19,8 @@ limitations under the License.
 package fake
 
 import (
+	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
 	"context"
-	v1alpha1 "k8s-sample-controller/pkg/apis/samplecontroller/v1alpha1"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -41,22 +41,24 @@ var subratasKind = v1alpha1.SchemeGroupVersion.WithKind("Subrata")
 
 // Get takes name of the subrata, and returns the corresponding subrata object, and an error if there is any.
 func (c *FakeSubratas) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Subrata, err error) {
+	emptyResult := &v1alpha1.Subrata{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(subratasResource, c.ns, name), &v1alpha1.Subrata{})
+		Invokes(testing.NewGetAction(subratasResource, c.ns, name), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Subrata), err
 }
 
 // List takes label and field selectors, and returns the list of Subratas that match those selectors.
 func (c *FakeSubratas) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.SubrataList, err error) {
+	emptyResult := &v1alpha1.SubrataList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(subratasResource, subratasKind, c.ns, opts), &v1alpha1.SubrataList{})
+		Invokes(testing.NewListAction(subratasResource, subratasKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -81,34 +83,37 @@ func (c *FakeSubratas) Watch(ctx context.Context, opts v1.ListOptions) (watch.In
 
 // Create takes the representation of a subrata and creates it.  Returns the server's representation of the subrata, and an error, if there is any.
 func (c *FakeSubratas) Create(ctx context.Context, subrata *v1alpha1.Subrata, opts v1.CreateOptions) (result *v1alpha1.Subrata, err error) {
+	emptyResult := &v1alpha1.Subrata{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(subratasResource, c.ns, subrata), &v1alpha1.Subrata{})
+		Invokes(testing.NewCreateAction(subratasResource, c.ns, subrata), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Subrata), err
 }
 
 // Update takes the representation of a subrata and updates it. Returns the server's representation of the subrata, and an error, if there is any.
 func (c *FakeSubratas) Update(ctx context.Context, subrata *v1alpha1.Subrata, opts v1.UpdateOptions) (result *v1alpha1.Subrata, err error) {
+	emptyResult := &v1alpha1.Subrata{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(subratasResource, c.ns, subrata), &v1alpha1.Subrata{})
+		Invokes(testing.NewUpdateAction(subratasResource, c.ns, subrata), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Subrata), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeSubratas) UpdateStatus(ctx context.Context, subrata *v1alpha1.Subrata, opts v1.UpdateOptions) (*v1alpha1.Subrata, error) {
+func (c *FakeSubratas) UpdateStatus(ctx context.Context, subrata *v1alpha1.Subrata, opts v1.UpdateOptions) (result *v1alpha1.Subrata, err error) {
+	emptyResult := &v1alpha1.Subrata{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(subratasResource, "status", c.ns, subrata), &v1alpha1.Subrata{})
+		Invokes(testing.NewUpdateSubresourceAction(subratasResource, "status", c.ns, subrata), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Subrata), err
 }
@@ -131,11 +136,12 @@ func (c *FakeSubratas) DeleteCollection(ctx context.Context, opts v1.DeleteOptio
 
 // Patch applies the patch and returns the patched subrata.
 func (c *FakeSubratas) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Subrata, err error) {
+	emptyResult := &v1alpha1.Subrata{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(subratasResource, c.ns, name, pt, data, subresources...), &v1alpha1.Subrata{})
+		Invokes(testing.NewPatchSubresourceAction(subratasResource, c.ns, name, pt, data, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.Subrata), err
 }

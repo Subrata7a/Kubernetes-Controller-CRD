@@ -1,5 +1,5 @@
-apiVersion: samplecontroller.evan.com/v1alpha1
-kind: subrata
+apiVersion: samplecontroller.subrata.com/v1alpha1
+kind: Subrata
 metadata:
   name: example
   namespace: default
