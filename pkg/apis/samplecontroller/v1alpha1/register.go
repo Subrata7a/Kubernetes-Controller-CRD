@@ -17,11 +17,10 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	"SampleCRDControlle/pkg/apis/samplecontroller"
 )
 
 // SchemeGroupVersion is group version used to register these objects

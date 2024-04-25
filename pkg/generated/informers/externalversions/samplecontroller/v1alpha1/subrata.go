@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	samplecontrollerv1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
-	versioned "SampleCRDControlle/pkg/generated/clientset/versioned"
-	internalinterfaces "SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "SampleCRDControlle/pkg/generated/listers/samplecontroller/v1alpha1"
 	"context"
 	time "time"
 
+	samplecontrollerv1alpha1 "github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	versioned "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned"
+	internalinterfaces "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/subrata/SampleCRDControlle/pkg/generated/listers/samplecontroller/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

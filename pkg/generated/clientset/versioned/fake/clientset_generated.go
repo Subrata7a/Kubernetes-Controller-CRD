@@ -19,10 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "SampleCRDControlle/pkg/generated/clientset/versioned"
-	samplecontrollerv1alpha1 "SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
-	fakesamplecontrollerv1alpha1 "SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1/fake"
-
+	clientset "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned"
+	samplecontrollerv1alpha1 "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1"
+	fakesamplecontrollerv1alpha1 "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned/typed/samplecontroller/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

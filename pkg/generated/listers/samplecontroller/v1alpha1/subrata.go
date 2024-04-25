@@ -19,10 +19,9 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
-
-	"k8s.io/apimachinery/pkg/api/errors"
+	v1alpha1 "github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -39,25 +38,17 @@ type SubrataLister interface {
 
 // subrataLister implements the SubrataLister interface.
 type subrataLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.Subrata]
 }
 
 // NewSubrataLister returns a new SubrataLister.
 func NewSubrataLister(indexer cache.Indexer) SubrataLister {
-	return &subrataLister{indexer: indexer}
-}
-
-// List lists all Subratas in the indexer.
-func (s *subrataLister) List(selector labels.Selector) (ret []*v1alpha1.Subrata, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Subrata))
-	})
-	return ret, err
+	return &subrataLister{listers.New[*v1alpha1.Subrata](indexer, v1alpha1.Resource("subrata"))}
 }
 
 // Subratas returns an object that can list and get Subratas.
 func (s *subrataLister) Subratas(namespace string) SubrataNamespaceLister {
-	return subrataNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return subrataNamespaceLister{listers.NewNamespaced[*v1alpha1.Subrata](s.ResourceIndexer, namespace)}
 }
 
 // SubrataNamespaceLister helps list and get Subratas.
@@ -75,26 +66,5 @@ type SubrataNamespaceLister interface {
 // subrataNamespaceLister implements the SubrataNamespaceLister
 // interface.
 type subrataNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all Subratas in the indexer for a given namespace.
-func (s subrataNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.Subrata, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.Subrata))
-	})
-	return ret, err
-}
-
-// Get retrieves the Subrata from the indexer for a given namespace and name.
-func (s subrataNamespaceLister) Get(name string) (*v1alpha1.Subrata, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("subrata"), name)
-	}
-	return obj.(*v1alpha1.Subrata), nil
+	listers.ResourceIndexer[*v1alpha1.Subrata]
 }

@@ -19,7 +19,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	internalinterfaces "SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
+	internalinterfaces "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
 )
 
 // Interface provides access to all the informers in this group version.

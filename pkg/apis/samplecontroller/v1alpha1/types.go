@@ -64,6 +64,7 @@ type SubrataSpec struct {
 
 // SubrataStatus is the status for an Subrata resource
 type SubrataStatus struct {
+	c
 	AvailableReplicas int32 `json:"availableReplicas"`
 }
 

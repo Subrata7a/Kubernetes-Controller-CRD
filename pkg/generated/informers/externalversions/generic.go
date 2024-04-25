@@ -19,9 +19,9 @@ limitations under the License.
 package externalversions
 
 import (
-	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
 	"fmt"
 
+	v1alpha1 "github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )

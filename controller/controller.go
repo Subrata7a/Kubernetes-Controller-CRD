@@ -26,11 +26,11 @@ import (
 	"log"
 	"time"
 
-	samplev1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
-	clientset "SampleCRDControlle/pkg/generated/clientset/versioned"
-	samplescheme "SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
-	informers "SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller/v1alpha1"
-	listers "SampleCRDControlle/pkg/generated/listers/samplecontroller/v1alpha1"
+	samplev1alpha1 "github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	clientset "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned"
+	samplescheme "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
+	informers "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller/v1alpha1"
+	listers "github.com/subrata/SampleCRDControlle/pkg/generated/listers/samplecontroller/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -267,7 +267,7 @@ func (c *Controller) processNextWorkItem(ctx context.Context) bool {
 			return nil
 		}
 		// Run the syncHandler, passing it the namespace/name string of the
-		// Evan resource to be synced.
+		// Subrata resource to be synced.
 		//fmt.Println(ctx)
 		//	fmt.Println(key)
 		if err := c.syncHandler(ctx, key); err != nil {
@@ -433,7 +433,7 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	// Service Get-----------------------------------------------------------------------------
 	Subrata, err = c.subratasLister.Subratas(namespace).Get(name)
 	if err != nil {
-		// The Evan resource may no longer exist, in which case we stop
+		// The Subrata resource may no longer exist, in which case we stop
 		// processing.
 		if errors.IsNotFound(err) {
 			utilruntime.HandleError(fmt.Errorf("Subrata '%s' in work queue no longer exists", key))
@@ -462,7 +462,7 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	updateService := newService(Subrata, serviceName, serviceTargetPort)
 	if Subrata.Spec.DeletionPolicy == "WipeOut" {
 		updateService.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
-			*metav1.NewControllerRef(Subrata, samplev1alpha1.SchemeGroupVersion.WithKind("Evan")),
+			*metav1.NewControllerRef(Subrata, samplev1alpha1.SchemeGroupVersion.WithKind("Subrata")),
 		}
 	}
 

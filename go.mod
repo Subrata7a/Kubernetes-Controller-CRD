@@ -1,4 +1,4 @@
-module SampleCRDControlle
+module github.com/subrata/SampleCRDControlle
 
 go 1.22.0
 
@@ -7,7 +7,7 @@ require (
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.2
-	k8s.io/code-generator v0.30.0-alpha.3.0.20240418174133-2a5cd15965ea
+	k8s.io/code-generator v0.30.0-alpha.3.0.20240424174123-ff061d68bdb9
 	k8s.io/klog/v2 v2.120.1
 )
 

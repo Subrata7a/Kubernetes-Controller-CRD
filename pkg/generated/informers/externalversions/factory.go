@@ -19,13 +19,13 @@ limitations under the License.
 package externalversions
 
 import (
-	versioned "SampleCRDControlle/pkg/generated/clientset/versioned"
-	internalinterfaces "SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
-	samplecontroller "SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller"
 	reflect "reflect"
 	sync "sync"
 	time "time"
 
+	versioned "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned"
+	internalinterfaces "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
+	samplecontroller "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

@@ -19,8 +19,8 @@ limitations under the License.
 package samplecontroller
 
 import (
-	internalinterfaces "SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller/v1alpha1"
+	internalinterfaces "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/subrata/SampleCRDControlle/pkg/generated/informers/externalversions/samplecontroller/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

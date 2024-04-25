@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
-	"SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
 	"net/http"
 
+	v1alpha1 "github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	"github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"
 )
 

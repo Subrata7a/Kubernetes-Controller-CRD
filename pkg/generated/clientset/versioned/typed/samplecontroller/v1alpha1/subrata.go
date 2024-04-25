@@ -19,11 +19,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
-	scheme "SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
 	"context"
 	"time"
 
+	v1alpha1 "github.com/subrata/SampleCRDControlle/pkg/apis/samplecontroller/v1alpha1"
+	scheme "github.com/subrata/SampleCRDControlle/pkg/generated/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
