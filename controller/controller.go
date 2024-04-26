@@ -53,21 +53,21 @@ import (
 const controllerAgentName = "sample-controller"
 
 const (
-	// SuccessSynced is used as part of the Event 'reason' when a Subrata is synced
+	// SuccessSynced is used as part of the Event 'reason' when a Scc is synced
 	SuccessSynced = "Synced"
-	// ErrResourceExists is used as part of the Event 'reason' when a Subrata fails
+	// ErrResourceExists is used as part of the Event 'reason' when a Scc fails
 	// to sync due to a Deployment of the same name already existing.
 	ErrResourceExists = "ErrResourceExists"
 
 	// MessageResourceExists is the message used for Events when a resource
 	// fails to sync due to a Deployment already existing
-	MessageResourceExists = "Resource %q already exists and is not managed by Subrata"
-	// MessageResourceSynced is the message used for an Event fired when a Subrata
+	MessageResourceExists = "Resource %q already exists and is not managed by Scc"
+	// MessageResourceSynced is the message used for an Event fired when a Scc
 	// is synced successfully
-	MessageResourceSynced = "Subrata synced successfully"
+	MessageResourceSynced = "Scc synced successfully"
 )
 
-// Controller is the controller implementation for Evan resources
+// Controller is the controller implementation for Scc resources
 type Controller struct {
 	// kubeclientset is a standard kubernetes clientset
 	kubeclientset kubernetes.Interface
@@ -82,9 +82,9 @@ type Controller struct {
 	serviceLister corev1lister.ServiceLister
 	serviceSynced cache.InformerSynced
 
-	// Subrata Resource
-	subratasLister listers.SubrataLister
-	subratasSynced cache.InformerSynced
+	// Scc Resource
+	sccsLister listers.SccLister
+	sccsSynced cache.InformerSynced
 
 	// workqueue is a rate limited work queue. This is used to queue work to be
 	// processed instead of performing it as soon as a change happens. This
@@ -107,7 +107,7 @@ func NewController(
 	deploymentInformer appsinformers.DeploymentInformer,
 	serviceInformer corev1informers.ServiceInformer,
 
-	SubrataInformer informers.SubrataInformer) *Controller {
+	SccInformer informers.SccInformer) *Controller {
 	logger := klog.FromContext(ctx)
 
 	// Create event broadcaster
@@ -138,26 +138,26 @@ func NewController(
 		serviceLister: serviceInformer.Lister(),
 		serviceSynced: serviceInformer.Informer().HasSynced,
 
-		// Subrata Resource
-		subratasLister: SubrataInformer.Lister(),
-		subratasSynced: SubrataInformer.Informer().HasSynced,
+		// Scc Resource
+		sccsLister: SccInformer.Lister(),
+		sccsSynced: SccInformer.Informer().HasSynced,
 
 		workqueue: workqueue.NewRateLimitingQueue(ratelimiter),
 		recorder:  recorder,
 	}
 
 	logger.Info("Setting up event handlers")
-	// Set up an event handler for when Subrata resources change
-	SubrataInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-		AddFunc: controller.enqueueSubrata,
+	// Set up an event handler for when Scc resources change
+	SccInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: controller.enqueueScc,
 		UpdateFunc: func(old, new interface{}) {
-			controller.enqueueSubrata(new)
+			controller.enqueueScc(new)
 		},
 	})
 
 	// Set up an event handler for when Deployment resources change. This
 	// handler will lookup the owner of the given Deployment, and if it is
-	// owned by a Subrata resource then the handler will enqueue that Subrata resource for
+	// owned by a Scc resource then the handler will enqueue that Scc resource for
 	// processing. This way, we don't need to implement custom logic for
 	// handling Deployment resources. More info on this pattern:
 	// https://github.com/kubernetes/community/blob/8cafef897a22026d42f5e5bb3f104febe7e29830/contributors/devel/controllers.md
@@ -202,17 +202,17 @@ func (c *Controller) Run(ctx context.Context, workers int) error {
 	logger := klog.FromContext(ctx)
 
 	// Start the informer factories to begin populating the informer caches
-	logger.Info("Starting Subrata controller")
+	logger.Info("Starting Scc controller")
 
 	// Wait for the caches to be synced before starting workers
 	logger.Info("Waiting for informer caches to sync")
 
-	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentsSynced, c.serviceSynced, c.subratasSynced); !ok {
+	if ok := cache.WaitForCacheSync(ctx.Done(), c.deploymentsSynced, c.serviceSynced, c.sccsSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
 	logger.Info("Starting workers", "count", workers)
-	// Launch two workers to process Subrata resources
+	// Launch two workers to process Scc resources
 	for i := 0; i < workers; i++ {
 		go wait.UntilWithContext(ctx, c.runWorker, time.Second)
 	}
@@ -267,7 +267,7 @@ func (c *Controller) processNextWorkItem(ctx context.Context) bool {
 			return nil
 		}
 		// Run the syncHandler, passing it the namespace/name string of the
-		// Evan resource to be synced.
+		// Scc resource to be synced.
 		//fmt.Println(ctx)
 		//	fmt.Println(key)
 		if err := c.syncHandler(ctx, key); err != nil {
@@ -289,55 +289,55 @@ func (c *Controller) processNextWorkItem(ctx context.Context) bool {
 	return true
 }
 
-func generateDeploymentName(subrataName string, subrataDeploymentName string, resourceCreationTimestamp int64) string {
-	deploymentName := fmt.Sprintf("%s-%s-%s", subrataName, subrataDeploymentName, strconv.FormatInt(resourceCreationTimestamp, 10))
-	if subrataDeploymentName == "" {
-		deploymentName = fmt.Sprintf("%s-%s", subrataName, strconv.FormatInt(resourceCreationTimestamp, 10))
+func generateDeploymentName(sccName string, sccDeploymentName string, resourceCreationTimestamp int64) string {
+	deploymentName := fmt.Sprintf("%s-%s-%s", sccName, sccDeploymentName, strconv.FormatInt(resourceCreationTimestamp, 10))
+	if sccDeploymentName == "" {
+		deploymentName = fmt.Sprintf("%s-%s", sccName, strconv.FormatInt(resourceCreationTimestamp, 10))
 	}
 	return deploymentName
 }
-func generateServiceName(subrataName string, subrataServiceName string, resourceCreationTimestamp int64) string {
-	deploymentName := fmt.Sprintf("%s-%s-%s", subrataName, subrataServiceName, strconv.FormatInt(resourceCreationTimestamp, 10))
-	if subrataServiceName == "" {
-		deploymentName = fmt.Sprintf("%s-%s", subrataName, strconv.FormatInt(resourceCreationTimestamp, 10))
+func generateServiceName(sccName string, sccServiceName string, resourceCreationTimestamp int64) string {
+	deploymentName := fmt.Sprintf("%s-%s-%s", sccName, sccServiceName, strconv.FormatInt(resourceCreationTimestamp, 10))
+	if sccServiceName == "" {
+		deploymentName = fmt.Sprintf("%s-%s", sccName, strconv.FormatInt(resourceCreationTimestamp, 10))
 	}
 	return deploymentName
 }
 
-func isReplicasChanged(subrataReplicas int32, deploymentReplicas int32) bool {
-	if subrataReplicas != 0 && subrataReplicas != deploymentReplicas {
+func isReplicasChanged(sccReplicas int32, deploymentReplicas int32) bool {
+	if sccReplicas != 0 && sccReplicas != deploymentReplicas {
 		return true
 	}
 	return false
 }
-func isDeploymentNameChanged(subrataDeploymentName string, deploymentName string) bool {
-	if subrataDeploymentName != "" && subrataDeploymentName != deploymentName {
+func isDeploymentNameChanged(sccDeploymentName string, deploymentName string) bool {
+	if sccDeploymentName != "" && sccDeploymentName != deploymentName {
 		return true
 	}
 	return false
 }
-func isDeploymentImageChanged(subrataDeploymentImage string, deploymentImage string) bool {
-	if subrataDeploymentImage != "" && subrataDeploymentImage != deploymentImage {
+func isDeploymentImageChanged(sccDeploymentImage string, deploymentImage string) bool {
+	if sccDeploymentImage != "" && sccDeploymentImage != deploymentImage {
 		return true
 	}
 	return false
 }
 
-func isServiceNameChanged(subrataServiceName string, serviceName string) bool {
-	if subrataServiceName != "" && subrataServiceName != serviceName {
+func isServiceNameChanged(sccServiceName string, serviceName string) bool {
+	if sccServiceName != "" && sccServiceName != serviceName {
 		return true
 	}
 	return false
 }
-func isServicePortChanged(subrataServicePort int32, servicePort int32) bool {
-	if subrataServicePort != 0 && subrataServicePort != servicePort {
+func isServicePortChanged(sccServicePort int32, servicePort int32) bool {
+	if sccServicePort != 0 && sccServicePort != servicePort {
 		return true
 	}
 	return false
 }
 
 // syncHandler compares the actual state with the desired, and attempts to
-// converge the two. It then updates the Status block of the Subrata resource
+// converge the two. It then updates the Status block of the Scc resource
 // with the current status of the resource.
 func (c *Controller) syncHandler(ctx context.Context, key string) error {
 
@@ -351,41 +351,41 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// Get the Subrata resource with this namespace/name
-	Subrata, err := c.subratasLister.Subratas(namespace).Get(name)
+	// Get the Scc resource with this namespace/name
+	Scc, err := c.sccsLister.Sccs(namespace).Get(name)
 
 	if err != nil {
-		//The Subrata resource may no longer exist, in which case we stop processing.
+		//The Scc resource may no longer exist, in which case we stop processing.
 		if errors.IsNotFound(err) {
-			utilruntime.HandleError(fmt.Errorf("Subrata '%s' in work queue no longer exists", key))
+			utilruntime.HandleError(fmt.Errorf("Scc '%s' in work queue no longer exists", key))
 			return nil
 		}
 		return err
 	}
 
 	// Get Resource CreationTimestamp
-	resourceCreationTimestamp := Subrata.CreationTimestamp.Unix()
+	resourceCreationTimestamp := Scc.CreationTimestamp.Unix()
 	// Deployment Name
-	deploymentName := generateDeploymentName(Subrata.Name, Subrata.Spec.DeploymentConfig.Name, resourceCreationTimestamp)
+	deploymentName := generateDeploymentName(Scc.Name, Scc.Spec.DeploymentConfig.Name, resourceCreationTimestamp)
 
 	// Check DeletionPolicy
-	if Subrata.Spec.DeletionPolicy == "" {
-		Subrata.Spec.DeletionPolicy = "WipeOut"
+	if Scc.Spec.DeletionPolicy == "" {
+		Scc.Spec.DeletionPolicy = "WipeOut"
 	}
 
 	// If DeletionPolicy is WipeOut, add owner reference
-	updateDeployment := newDeployment(Subrata, deploymentName)
-	if Subrata.Spec.DeletionPolicy == "WipeOut" {
+	updateDeployment := newDeployment(Scc, deploymentName)
+	if Scc.Spec.DeletionPolicy == "WipeOut" {
 		updateDeployment.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
-			*metav1.NewControllerRef(Subrata, samplev1alpha1.SchemeGroupVersion.WithKind("Subrata")),
+			*metav1.NewControllerRef(Scc, samplev1alpha1.SchemeGroupVersion.WithKind("Scc")),
 		}
 	}
 
-	// Get the deployment with the name specified in Subrata.spec
-	deployment, err := c.deploymentsLister.Deployments(Subrata.ObjectMeta.Namespace).Get(deploymentName)
+	// Get the deployment with the name specified in Scc.spec
+	deployment, err := c.deploymentsLister.Deployments(Scc.ObjectMeta.Namespace).Get(deploymentName)
 	// If the resource doesn't exist, we'll create it
 	if errors.IsNotFound(err) {
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Create(context.TODO(), updateDeployment, metav1.CreateOptions{})
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Scc.ObjectMeta.Namespace).Create(context.TODO(), updateDeployment, metav1.CreateOptions{})
 		if err != nil {
 			log.Println(err)
 			return err
@@ -393,20 +393,20 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 		log.Printf("\ndeployment %s created .....\n", deploymentName)
 	}
 
-	// If the Deployment is not controlled by this Evan resource, we should log
+	// If the Deployment is not controlled by this Scc resource, we should log
 	// a warning to the event recorder and return error msg.
-	if Subrata.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(deployment, Subrata) {
+	if Scc.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(deployment, Scc) {
 		msg := fmt.Sprintf(MessageResourceExists, deploymentName)
-		c.recorder.Event(Subrata, corev1.EventTypeWarning, ErrResourceExists, msg)
+		c.recorder.Event(Scc, corev1.EventTypeWarning, ErrResourceExists, msg)
 		return fmt.Errorf("%s", msg)
 	}
 
-	// If this number of the replicas on the Evan resource is specified, and the
+	// If this number of the replicas on the Scc resource is specified, and the
 	// number does not equal the current desired replicas on the Deployment, we
 	// should update the Deployment resource.
-	if isReplicasChanged(*Subrata.Spec.DeploymentConfig.Replicas, *deployment.Spec.Replicas) {
-		logger.V(4).Info("Update deployment resource", "currentReplicas", *Subrata.Spec.DeploymentConfig.Replicas, "desiredReplicas", *deployment.Spec.Replicas)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
+	if isReplicasChanged(*Scc.Spec.DeploymentConfig.Replicas, *deployment.Spec.Replicas) {
+		logger.V(4).Info("Update deployment resource", "currentReplicas", *Scc.Spec.DeploymentConfig.Replicas, "desiredReplicas", *deployment.Spec.Replicas)
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Scc.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -415,62 +415,62 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	// If Deployment Name Change ------------------------------------------------
 	if isDeploymentNameChanged(deploymentName, deployment.ObjectMeta.Name) {
 		logger.V(4).Info("Update deployment resource", "currentName", deploymentName, "desiredName", deployment.ObjectMeta.Name)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Scc.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	// If Deployment Image Change ------------------------------------------------
-	if isDeploymentImageChanged(Subrata.Spec.DeploymentConfig.Image, deployment.Spec.Template.Spec.Containers[0].Image) {
-		logger.V(4).Info("Update deployment resource", "currentImage", Subrata.Spec.DeploymentConfig.Image, "desiredImage", deployment.Spec.Template.Spec.Containers[0].Image)
-		deployment, err = c.kubeclientset.AppsV1().Deployments(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
+	if isDeploymentImageChanged(Scc.Spec.DeploymentConfig.Image, deployment.Spec.Template.Spec.Containers[0].Image) {
+		logger.V(4).Info("Update deployment resource", "currentImage", Scc.Spec.DeploymentConfig.Image, "desiredImage", deployment.Spec.Template.Spec.Containers[0].Image)
+		deployment, err = c.kubeclientset.AppsV1().Deployments(Scc.ObjectMeta.Namespace).Update(context.TODO(), updateDeployment, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
 	// Service Get-----------------------------------------------------------------------------
-	Subrata, err = c.subratasLister.Subratas(namespace).Get(name)
+	Scc, err = c.sccsLister.Sccs(namespace).Get(name)
 	if err != nil {
-		// The Evan resource may no longer exist, in which case we stop
+		// The Scc resource may no longer exist, in which case we stop
 		// processing.
 		if errors.IsNotFound(err) {
-			utilruntime.HandleError(fmt.Errorf("Subrata '%s' in work queue no longer exists", key))
+			utilruntime.HandleError(fmt.Errorf("Scc '%s' in work queue no longer exists", key))
 			return nil
 		}
 		return err
 	}
 
 	// Service Name
-	serviceName := generateServiceName(Subrata.Name, Subrata.Spec.ServiceConfig.Name, resourceCreationTimestamp)
+	serviceName := generateServiceName(Scc.Name, Scc.Spec.ServiceConfig.Name, resourceCreationTimestamp)
 
 	// Get the service port
-	servicePort := Subrata.Spec.ServiceConfig.Port
+	servicePort := Scc.Spec.ServiceConfig.Port
 	if servicePort == 0 {
 		utilruntime.HandleError(fmt.Errorf("Service Port is not provided by user"))
 		return nil
 	}
 
 	// If TargetPort is not defined by User, set the TargetPort as same as Port
-	serviceTargetPort := Subrata.Spec.ServiceConfig.TargetPort
-	if Subrata.Spec.ServiceConfig.TargetPort == 0 {
+	serviceTargetPort := Scc.Spec.ServiceConfig.TargetPort
+	if Scc.Spec.ServiceConfig.TargetPort == 0 {
 		serviceTargetPort = servicePort
 	}
 
 	// If deletion Policy is WipeOut, then set the owner Reference
-	updateService := newService(Subrata, serviceName, serviceTargetPort)
-	if Subrata.Spec.DeletionPolicy == "WipeOut" {
+	updateService := newService(Scc, serviceName, serviceTargetPort)
+	if Scc.Spec.DeletionPolicy == "WipeOut" {
 		updateService.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
-			*metav1.NewControllerRef(Subrata, samplev1alpha1.SchemeGroupVersion.WithKind("Evan")),
+			*metav1.NewControllerRef(Scc, samplev1alpha1.SchemeGroupVersion.WithKind("Scc")),
 		}
 	}
 
-	// Get the service with the name specified in Evan.spec
-	service, err := c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
+	// Get the service with the name specified in Scc.spec
+	service, err := c.kubeclientset.CoreV1().Services(Scc.ObjectMeta.Namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if errors.IsNotFound(err) {
 		// Create the service
-		service, err = c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Create(context.TODO(), updateService, metav1.CreateOptions{})
+		service, err = c.kubeclientset.CoreV1().Services(Scc.ObjectMeta.Namespace).Create(context.TODO(), updateService, metav1.CreateOptions{})
 		if err != nil {
 			log.Println(err)
 			return err
@@ -478,16 +478,16 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 		log.Printf("\nservice %s created .....\n", serviceName)
 	}
 
-	if Subrata.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(service, Subrata) {
+	if Scc.Spec.DeletionPolicy == "WipeOut" && !metav1.IsControlledBy(service, Scc) {
 		msg := fmt.Sprintf(MessageResourceExists, serviceName)
-		c.recorder.Event(Subrata, corev1.EventTypeWarning, ErrResourceExists, msg)
+		c.recorder.Event(Scc, corev1.EventTypeWarning, ErrResourceExists, msg)
 		return fmt.Errorf("%s", msg)
 	}
 
 	// If Service Name Change, update the service
 	if isServiceNameChanged(serviceName, service.ObjectMeta.Name) {
 		logger.V(4).Info("Update Service resource", "currentName", serviceName, "desiredName", service.ObjectMeta.Name)
-		service, err = c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
+		service, err = c.kubeclientset.CoreV1().Services(Scc.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -496,13 +496,13 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	// If Service Port Change, update the service
 	if isServicePortChanged(servicePort, service.Spec.Ports[0].Port) {
 		logger.V(4).Info("Update Service resource", "currentName", servicePort, "desiredName", service.Spec.Ports[0].Port)
-		service, err = c.kubeclientset.CoreV1().Services(Subrata.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
+		service, err = c.kubeclientset.CoreV1().Services(Scc.ObjectMeta.Namespace).Update(context.TODO(), updateService, metav1.UpdateOptions{})
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	err = c.updateSubrata(Subrata, updateDeployment)
+	err = c.updateScc(Scc, updateDeployment)
 	if err != nil {
 		return err
 	}
@@ -510,24 +510,24 @@ func (c *Controller) syncHandler(ctx context.Context, key string) error {
 	return nil
 }
 
-func (c *Controller) updateSubrata(Subrata *samplev1alpha1.Subrata, deployment *appsv1.Deployment) error {
+func (c *Controller) updateScc(Scc *samplev1alpha1.Scc, deployment *appsv1.Deployment) error {
 	// NEVER modify objects from the store. It's a read-only, local cache.
 	// You can use DeepCopy() to make a deep copy of original object and modify this copy
 	// Or create a copy manually for better performance
-	SubrataCopy := Subrata.DeepCopy()
-	SubrataCopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
+	SccCopy := Scc.DeepCopy()
+	SccCopy.Status.AvailableReplicas = deployment.Status.AvailableReplicas
 	// If the CustomResourceSubresources feature gate is not enabled,
-	// we must use Update instead of UpdateStatus to update the Status block of the Evan resource.
+	// we must use Update instead of UpdateStatus to update the Status block of the Scc resource.
 	// UpdateStatus will not allow changes to the Spec of the resource,
 	// which is ideal for ensuring nothing other than resource status has been updated.
-	_, err := c.sampleclientset.SamplecontrollerV1alpha1().Subratas(Subrata.ObjectMeta.Namespace).Update(context.TODO(), SubrataCopy, metav1.UpdateOptions{})
+	_, err := c.sampleclientset.SamplecontrollerV1alpha1().Sccs(Scc.ObjectMeta.Namespace).Update(context.TODO(), SccCopy, metav1.UpdateOptions{})
 	return err
 }
 
-// enqueueSubrata takes a Subrata resource and converts it into a namespace/name
+// enqueueScc takes a Scc resource and converts it into a namespace/name
 // string which is then put onto the work queue. This method should *not* be
-// passed resources of any type other than Evan.
-func (c *Controller) enqueueSubrata(obj interface{}) {
+// passed resources of any type other than Scc.
+func (c *Controller) enqueueScc(obj interface{}) {
 	var key string
 	var err error
 	if key, err = cache.MetaNamespaceKeyFunc(obj); err != nil {
@@ -538,9 +538,9 @@ func (c *Controller) enqueueSubrata(obj interface{}) {
 }
 
 // handleObject will take any resource implementing metav1.Object and attempt
-// to find the Subrata resource that 'owns' it. It does this by looking at the
+// to find the Scc resource that 'owns' it. It does this by looking at the
 // objects metadata.ownerReferences field for an appropriate OwnerReference.
-// It then enqueues that Subrata resource to be processed. If the object does not
+// It then enqueues that Scc resource to be processed. If the object does not
 // have an appropriate OwnerReference, it will simply be skipped.
 func (c *Controller) handleObject(obj interface{}) {
 	var object metav1.Object
@@ -561,26 +561,26 @@ func (c *Controller) handleObject(obj interface{}) {
 	}
 	logger.V(4).Info("Processing object", "object", klog.KObj(object))
 	if ownerRef := metav1.GetControllerOf(object); ownerRef != nil {
-		// If this object is not owned by a Evan, we should not do anything more
+		// If this object is not owned by a Scc, we should not do anything more
 		// with it.
-		if ownerRef.Kind != "Subrata" {
+		if ownerRef.Kind != "Scc" {
 			return
 		}
 
-		Subrata, err := c.subratasLister.Subratas(object.GetNamespace()).Get(ownerRef.Name)
+		Scc, err := c.sccsLister.Sccs(object.GetNamespace()).Get(ownerRef.Name)
 		if err != nil {
-			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "Evan", ownerRef.Name)
+			logger.V(4).Info("Ignore orphaned object", "object", klog.KObj(object), "Scc", ownerRef.Name)
 			return
 		}
-		c.enqueueSubrata(Subrata)
+		c.enqueueScc(Scc)
 		return
 	}
 }
 
-// newDeployment creates a new Deployment for an Subrata resource. It also sets
+// newDeployment creates a new Deployment for an Scc resource. It also sets
 // the appropriate OwnerReferences on the resource so handleObject can discover
-// the Subrata resource that 'owns' it.
-func newDeployment(Subrata *samplev1alpha1.Subrata, deploymentName string) *appsv1.Deployment {
+// the Scc resource that 'owns' it.
+func newDeployment(Scc *samplev1alpha1.Scc, deploymentName string) *appsv1.Deployment {
 
 	deployment := &appsv1.Deployment{}
 	labels := map[string]string{
@@ -590,9 +590,9 @@ func newDeployment(Subrata *samplev1alpha1.Subrata, deploymentName string) *apps
 	deployment.TypeMeta.Kind = "Deployment"
 
 	deployment.ObjectMeta.Name = deploymentName
-	deployment.ObjectMeta.Namespace = Subrata.ObjectMeta.Namespace
+	deployment.ObjectMeta.Namespace = Scc.ObjectMeta.Namespace
 
-	deployment.Spec.Replicas = Subrata.Spec.DeploymentConfig.Replicas
+	deployment.Spec.Replicas = Scc.Spec.DeploymentConfig.Replicas
 	deployment.Spec.Selector = &metav1.LabelSelector{
 		MatchLabels: labels,
 	}
@@ -603,10 +603,10 @@ func newDeployment(Subrata *samplev1alpha1.Subrata, deploymentName string) *apps
 		Containers: []corev1.Container{
 			{
 				Name:  "nginx",
-				Image: Subrata.Spec.DeploymentConfig.Image,
+				Image: Scc.Spec.DeploymentConfig.Image,
 				Ports: []corev1.ContainerPort{
 					{
-						ContainerPort: Subrata.Spec.ServiceConfig.Port,
+						ContainerPort: Scc.Spec.ServiceConfig.Port,
 					},
 				},
 			},
@@ -615,7 +615,7 @@ func newDeployment(Subrata *samplev1alpha1.Subrata, deploymentName string) *apps
 	return deployment
 }
 
-func newService(Subrata *samplev1alpha1.Subrata, serviceName string, serviceTargetPort int32) *corev1.Service {
+func newService(Scc *samplev1alpha1.Scc, serviceName string, serviceTargetPort int32) *corev1.Service {
 
 	labels := map[string]string{
 		"app": "nginx",
@@ -629,18 +629,18 @@ func newService(Subrata *samplev1alpha1.Subrata, serviceName string, serviceTarg
 
 	service.ObjectMeta = metav1.ObjectMeta{
 		Name:      serviceName,
-		Namespace: Subrata.ObjectMeta.Namespace,
+		Namespace: Scc.ObjectMeta.Namespace,
 	}
 
 	service.Spec = corev1.ServiceSpec{
-		Type:     Subrata.Spec.ServiceConfig.Type,
+		Type:     Scc.Spec.ServiceConfig.Type,
 		Selector: labels,
 	}
 	service.Spec.Ports = []corev1.ServicePort{
 		corev1.ServicePort{
-			Port:       Subrata.Spec.ServiceConfig.Port,
+			Port:       Scc.Spec.ServiceConfig.Port,
 			TargetPort: intstr.FromInt32(serviceTargetPort),
-			NodePort:   Subrata.Spec.ServiceConfig.NodePort,
+			NodePort:   Scc.Spec.ServiceConfig.NodePort,
 		},
 	}
 	return service

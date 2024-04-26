@@ -28,16 +28,16 @@ import (
 
 type SamplecontrollerV1alpha1Interface interface {
 	RESTClient() rest.Interface
-	SubratasGetter
+	SccsGetter
 }
 
-// SamplecontrollerV1alpha1Client is used to interact with features provided by the samplecontroller.subrata.com group.
+// SamplecontrollerV1alpha1Client is used to interact with features provided by the samplecontroller.scc.com group.
 type SamplecontrollerV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *SamplecontrollerV1alpha1Client) Subratas(namespace string) SubrataInterface {
-	return newSubratas(c, namespace)
+func (c *SamplecontrollerV1alpha1Client) Sccs(namespace string) SccInterface {
+	return newSccs(c, namespace)
 }
 
 // NewForConfig creates a new SamplecontrollerV1alpha1Client for the given config.

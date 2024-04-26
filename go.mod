@@ -7,7 +7,7 @@ require (
 	k8s.io/api v0.29.2
 	k8s.io/apimachinery v0.29.2
 	k8s.io/client-go v0.29.2
-	k8s.io/code-generator v0.30.0-alpha.3.0.20240418174133-2a5cd15965ea
+	k8s.io/code-generator v0.30.0-alpha.3.0.20240301205840-f8417dff616b
 	k8s.io/klog/v2 v2.120.1
 )
 

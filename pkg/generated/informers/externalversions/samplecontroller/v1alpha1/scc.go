@@ -32,59 +32,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// SubrataInformer provides access to a shared informer and lister for
-// Subratas.
-type SubrataInformer interface {
+// SccInformer provides access to a shared informer and lister for
+// Sccs.
+type SccInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.SubrataLister
+	Lister() v1alpha1.SccLister
 }
 
-type subrataInformer struct {
+type sccInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewSubrataInformer constructs a new informer for Subrata type.
+// NewSccInformer constructs a new informer for Scc type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewSubrataInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredSubrataInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewSccInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredSccInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredSubrataInformer constructs a new informer for Subrata type.
+// NewFilteredSccInformer constructs a new informer for Scc type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredSubrataInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredSccInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Subratas(namespace).List(context.TODO(), options)
+				return client.SamplecontrollerV1alpha1().Sccs(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.SamplecontrollerV1alpha1().Subratas(namespace).Watch(context.TODO(), options)
+				return client.SamplecontrollerV1alpha1().Sccs(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&samplecontrollerv1alpha1.Subrata{},
+		&samplecontrollerv1alpha1.Scc{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *subrataInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredSubrataInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *sccInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredSccInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *subrataInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&samplecontrollerv1alpha1.Subrata{}, f.defaultInformer)
+func (f *sccInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&samplecontrollerv1alpha1.Scc{}, f.defaultInformer)
 }
 
-func (f *subrataInformer) Lister() v1alpha1.SubrataLister {
-	return v1alpha1.NewSubrataLister(f.Informer().GetIndexer())
+func (f *sccInformer) Lister() v1alpha1.SccLister {
+	return v1alpha1.NewSccLister(f.Informer().GetIndexer())
 }

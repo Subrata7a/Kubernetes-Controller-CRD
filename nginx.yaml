@@ -1,12 +1,12 @@
-apiVersion: samplecontroller.subrata.com/v1alpha1
-kind: Subrata
+apiVersion: samplecontroller.scc.com/v1alpha1
+kind: Scc
 metadata:
-  name: example
+  name: scc-example
   namespace: default
 spec:
   deploymentConfig:
-    name: sbr
-    replicas: 5
+    name: scr
+    replicas: 7
     image: nginx
   serviceConfig:
     type: NodePort

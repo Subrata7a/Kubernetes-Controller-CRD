@@ -111,12 +111,6 @@ golang.org/x/sys/windows
 golang.org/x/term
 # golang.org/x/text v0.14.0
 ## explicit; go 1.18
-golang.org/x/text/cases
-golang.org/x/text/internal
-golang.org/x/text/internal/language
-golang.org/x/text/internal/language/compact
-golang.org/x/text/internal/tag
-golang.org/x/text/language
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
@@ -550,7 +544,7 @@ k8s.io/client-go/util/flowcontrol
 k8s.io/client-go/util/homedir
 k8s.io/client-go/util/keyutil
 k8s.io/client-go/util/workqueue
-# k8s.io/code-generator v0.30.0-alpha.3.0.20240418174133-2a5cd15965ea
+# k8s.io/code-generator v0.30.0-alpha.3.0.20240301205840-f8417dff616b
 ## explicit; go 1.22.0
 k8s.io/code-generator
 k8s.io/code-generator/cmd/applyconfiguration-gen

@@ -25,13 +25,13 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:printcolumn:name="AvailableReplicas",type="integer",JSONPath=".status.availableReplicas"
 
-// Subrata is a specification for a Subrata resource
-type Subrata struct {
+// Scc is a specification for a Scc resource
+type Scc struct {
 	metav1.TypeMeta   `json:",inline,omitempty"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   SubrataSpec   `json:"spec,omitempty"`
-	Status SubrataStatus `json:"status,omitempty"`
+	Spec   SccSpec   `json:"spec,omitempty"`
+	Status SccStatus `json:"status,omitempty"`
 }
 
 type DeploymentConfig struct {
@@ -55,24 +55,24 @@ const (
 	DeletionPolicyWipeOut DeletionPolicy = "WipeOut"
 )
 
-// SubrataSpec is the spec for an Subrata resource
-type SubrataSpec struct {
+// SccSpec is the spec for an Scc resource
+type SccSpec struct {
 	DeploymentConfig DeploymentConfig `json:"deploymentConfig,omitempty"`
 	ServiceConfig    ServiceConfig    `json:"serviceConfig,omitempty"`
 	DeletionPolicy   DeletionPolicy   `json:"deletionPolicy,omitempty"`
 }
 
-// SubrataStatus is the status for an Subrata resource
-type SubrataStatus struct {
+// SccStatus is the status for an Scc resource
+type SccStatus struct {
 	AvailableReplicas int32 `json:"availableReplicas"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// SubrataList is a list of Subrata resources
-type SubrataList struct {
+// SccList is a list of Scc resources
+type SccList struct {
 	metav1.TypeMeta `json:",inline,omitempty"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []Subrata `json:"items,omitempty"`
+	Items []Scc `json:"items,omitempty"`
 }

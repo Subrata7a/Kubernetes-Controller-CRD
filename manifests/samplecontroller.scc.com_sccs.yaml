@@ -3,15 +3,15 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
-  name: subrata.samplecontroller.subrata.com
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: sccs.samplecontroller.scc.com
 spec:
-  group: samplecontroller.subrata.com
+  group: samplecontroller.scc.com
   names:
-    kind: Subrata
-    listKind: SubrataList
-    plural: subrata
-    singular: subrata
+    kind: Scc
+    listKind: SccList
+    plural: sccs
+    singular: scc
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
@@ -21,7 +21,7 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Subrata is a specification for a Subrata resource
+        description: Scc is a specification for a Scc resource
         properties:
           apiVersion:
             description: |-
@@ -41,7 +41,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: SubrataSpec is the spec for an Subrata resource
+            description: SccSpec is the spec for an Scc resource
             properties:
               deletionPolicy:
                 type: string
@@ -77,7 +77,7 @@ spec:
                 type: object
             type: object
           status:
-            description: SubrataStatus is the status for an Subrata resource
+            description: SccStatus is the status for an Scc resource
             properties:
               availableReplicas:
                 format: int32

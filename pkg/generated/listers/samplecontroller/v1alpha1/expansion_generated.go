@@ -18,10 +18,10 @@ limitations under the License.
 
 package v1alpha1
 
-// SubrataListerExpansion allows custom methods to be added to
-// SubrataLister.
-type SubrataListerExpansion interface{}
+// SccListerExpansion allows custom methods to be added to
+// SccLister.
+type SccListerExpansion interface{}
 
-// SubrataNamespaceListerExpansion allows custom methods to be added to
-// SubrataNamespaceLister.
-type SubrataNamespaceListerExpansion interface{}
+// SccNamespaceListerExpansion allows custom methods to be added to
+// SccNamespaceLister.
+type SccNamespaceListerExpansion interface{}

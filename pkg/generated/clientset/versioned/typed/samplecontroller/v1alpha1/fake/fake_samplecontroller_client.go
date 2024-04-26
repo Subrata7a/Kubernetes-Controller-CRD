@@ -29,8 +29,8 @@ type FakeSamplecontrollerV1alpha1 struct {
 	*testing.Fake
 }
 
-func (c *FakeSamplecontrollerV1alpha1) Subratas(namespace string) v1alpha1.SubrataInterface {
-	return &FakeSubratas{c, namespace}
+func (c *FakeSamplecontrollerV1alpha1) Sccs(namespace string) v1alpha1.SccInterface {
+	return &FakeSccs{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
